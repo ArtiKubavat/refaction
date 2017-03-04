@@ -1,115 +1,147 @@
 ﻿using System;
 using System.Net;
 using System.Web.Http;
-using refactor_me.Models;
 
-namespace refactor_me.Controllers
+using ProductAPI.Models;
+using ProductAPI.Services;
+using System.Net.Http;
+
+namespace ProductAPI.Controllers
 {
-    [RoutePrefix("products")]
-    public class ProductsController : ApiController
-    {
-        [Route]
-        [HttpGet]
-        public Products GetAll()
-        {
-            return new Products();
-        }
+	[RoutePrefix("products")]
+	public class ProductsController : ApiController
+	{
 
-        [Route]
-        [HttpGet]
-        public Products SearchByName(string name)
-        {
-            return new Products(name);
-        }
+		private readonly IProductService _productService;
+		private readonly IProductOptionService _productOptionService;
 
-        [Route("{id}")]
-        [HttpGet]
-        public Product GetProduct(Guid id)
-        {
-            var product = new Product(id);
-            if (product.IsNew)
-                throw new HttpResponseException(HttpStatusCode.NotFound);
+		public ProductsController(IProductService productService, IProductOptionService productOptionService)
+		{
+			_productService = productService;
+			_productOptionService = productOptionService;
+		}
 
-            return product;
-        }
 
-        [Route]
-        [HttpPost]
-        public void Create(Product product)
-        {
-            product.Save();
-        }
+		#region "Products"
+		[Route]
+		[HttpPost]
+		public HttpResponseMessage CreateProduct(Product product)
+		{
+			_productService.CreateProduct(product);
+			return Request.CreateResponse(HttpStatusCode.NoContent);
+		}
 
-        [Route("{id}")]
-        [HttpPut]
-        public void Update(Guid id, Product product)
-        {
-            var orig = new Product(id)
-            {
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                DeliveryPrice = product.DeliveryPrice
-            };
+		[Route("{id}")]
+		[HttpPut]
+		public HttpResponseMessage UpdateProduct(Guid id, Product product)
+		{
+			if(product.Id != id)
+			{
+				throw new HttpResponseException(HttpStatusCode.BadRequest);
+			}
+			_productService.UpdateProduct(id, product);
+			return Request.CreateResponse(HttpStatusCode.NoContent);
+		}
 
-            if (!orig.IsNew)
-                orig.Save();
-        }
+		[Route("{id}")]
+		[HttpDelete]
+		public HttpResponseMessage DeleteProduct(Guid id)
+		{
+			_productService.DeleteProduct(id);
+			_productOptionService.DeleteByProductId(id);
 
-        [Route("{id}")]
-        [HttpDelete]
-        public void Delete(Guid id)
-        {
-            var product = new Product(id);
-            product.Delete();
-        }
+			return Request.CreateResponse(HttpStatusCode.NoContent);
+		}
 
-        [Route("{productId}/options")]
-        [HttpGet]
-        public ProductOptions GetOptions(Guid productId)
-        {
-            return new ProductOptions(productId);
-        }
+		[Route]
+		[HttpGet]
+		public Products GetAllProducts()
+		{
+			return _productService.GetProducts();
+		}
 
-        [Route("{productId}/options/{id}")]
-        [HttpGet]
-        public ProductOption GetOption(Guid productId, Guid id)
-        {
-            var option = new ProductOption(id);
-            if (option.IsNew)
-                throw new HttpResponseException(HttpStatusCode.NotFound);
+		[Route]
+		[HttpGet]
+		public Products SearchByName(string name)
+		{
+			return _productService.GetProductByName(name);
+		}
 
-            return option;
-        }
+		[Route("{id}")]
+		[HttpGet]
+		public Product GetProduct(Guid id)
+		{
+			var product = _productService.GetProductById(id);
+			if (product == null)
+			{
+				throw new HttpResponseException(HttpStatusCode.NotFound);
+			}
 
-        [Route("{productId}/options")]
-        [HttpPost]
-        public void CreateOption(Guid productId, ProductOption option)
-        {
-            option.ProductId = productId;
-            option.Save();
-        }
+			return product;
+		}
 
-        [Route("{productId}/options/{id}")]
-        [HttpPut]
-        public void UpdateOption(Guid id, ProductOption option)
-        {
-            var orig = new ProductOption(id)
-            {
-                Name = option.Name,
-                Description = option.Description
-            };
+		#endregion
 
-            if (!orig.IsNew)
-                orig.Save();
-        }
+		#region "Product Options"
 
-        [Route("{productId}/options/{id}")]
-        [HttpDelete]
-        public void DeleteOption(Guid id)
-        {
-            var opt = new ProductOption(id);
-            opt.Delete();
-        }
-    }
+		[Route("{productId}/options")]
+		[HttpPost]
+		public HttpResponseMessage CreateOption(Guid productId, ProductOption option)
+		{
+			if (option.ProductId != productId)
+			{
+				throw new HttpResponseException(HttpStatusCode.BadRequest);
+			}
+			_productOptionService.Create(option);
+
+			return Request.CreateResponse(HttpStatusCode.NoContent);
+
+		}
+
+		[Route("{productId}/options/{id}")]
+		[HttpPut]
+		public HttpResponseMessage UpdateOption(Guid productId, Guid id, ProductOption option)
+		{
+			if (option.ProductId != productId || option.Id != id)
+			{
+				throw new HttpResponseException(HttpStatusCode.BadRequest);
+			}
+			_productOptionService.Update(option);
+
+			return Request.CreateResponse(HttpStatusCode.NoContent);
+		}
+
+		[Route("{productId}/options/{id}")]
+		[HttpDelete]
+		public HttpResponseMessage DeleteOptionById(Guid id)
+		{
+			_productOptionService.DeleteById(id);
+
+			return Request.CreateResponse(HttpStatusCode.NoContent);
+		}
+
+		[Route("{productId}/options")]
+		[HttpGet]
+		public ProductOptions GetOptions(Guid productId)
+		{
+			return _productOptionService.GetOptionsByProductId(productId);
+		}
+
+		[Route("{productId}/options/{id}")]
+		[HttpGet]
+		public ProductOption GetOptionById(Guid productId, Guid id)
+		{
+			var option = _productOptionService.GetSingleOptionByProductId(productId, id);
+			if (option == null)
+			{
+				throw new HttpResponseException(HttpStatusCode.NotFound);
+			}
+
+			return option;
+		}
+
+
+		#endregion
+
+	}
 }
