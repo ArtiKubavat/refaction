@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Net;
 using System.Web.Http;
+using System.Net.Http;
 
 using ProductAPI.Models;
 using ProductAPI.Services;
-using System.Net.Http;
 using ProductAPI.ExceptionHandler;
 
 namespace ProductAPI.Controllers

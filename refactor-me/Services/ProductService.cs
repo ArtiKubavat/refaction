@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Linq;
-using System.Data.Entity;
+using AutoMapper;
 
 using Domain = ProductAPI.Models;
+
 using ProductAPI.Data;
 using ProductAPI.ExceptionHandler;
-using AutoMapper;
-using System.Web.Http;
-using System.Net;
+
 
 namespace ProductAPI.Services
 {

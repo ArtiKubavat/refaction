@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
-using System.Data.Entity;
+using AutoMapper;
 
 using Domain = ProductAPI.Models;
-using AutoMapper;
+
 using ProductAPI.Data;
 using ProductAPI.ExceptionHandler;
 
