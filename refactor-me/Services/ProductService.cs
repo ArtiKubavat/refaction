@@ -4,6 +4,7 @@ using System.Data.Entity;
 
 using Domain = ProductAPI.Models;
 using ProductAPI.Data;
+using ProductAPI.ExceptionHandler;
 using AutoMapper;
 using System.Web.Http;
 using System.Net;
@@ -12,14 +13,20 @@ namespace ProductAPI.Services
 {
 	public class ProductService : IProductService
 	{
-		private readonly ProductDataContext _dbContext = new ProductDataContext();
+		private readonly ProductDataContext _dbContext;
+
+		public ProductService(ProductDataContext dbContext)
+		{
+			_dbContext = dbContext;
+		}
 
 		public void CreateProduct(Domain.Product product)
 		{
 			var domainProduct = Mapper.Map<Product>(product);
-			if (domainProduct != null)
+			var duplicateProduct = _dbContext.Products.Find(product.Id);
+			if (duplicateProduct != null)
 			{
-				throw new Exception("Duplicate Product Id found.");
+				throw new GlobalException("Duplicate Product Id found.");
 			}
 
 			if(domainProduct.Id == Guid.Empty)
@@ -37,7 +44,7 @@ namespace ProductAPI.Services
 
 			if (product == null)
 			{
-				throw new Exception("Product not available.");
+				throw new GlobalException("Product not available.");
 			}
 			_dbContext.Products.Remove(product);
 			_dbContext.SaveChanges();
@@ -49,10 +56,10 @@ namespace ProductAPI.Services
 
 			if (product == null)
 			{
-				throw new Exception("Product not available.");
+				throw new GlobalException("Product not available.");
 			}
 
-			_dbContext.Entry(product).State = EntityState.Modified;
+			_dbContext.UpdateEntity(product, Mapper.Map<Product>(updatedProduct));
 			_dbContext.SaveChanges();
 		}
 

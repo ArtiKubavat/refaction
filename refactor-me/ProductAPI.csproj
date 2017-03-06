@@ -189,6 +189,7 @@
     <Compile Include="Controllers\ProductsController.cs" />
     <Compile Include="Data\Product.cs" />
     <Compile Include="Data\ProductOption.cs" />
+    <Compile Include="ExceptionHandler\GlobalException.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

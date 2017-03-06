@@ -5,6 +5,7 @@ using System.Web.Http;
 using ProductAPI.Models;
 using ProductAPI.Services;
 using System.Net.Http;
+using ProductAPI.ExceptionHandler;
 
 namespace ProductAPI.Controllers
 {
@@ -27,7 +28,15 @@ namespace ProductAPI.Controllers
 		[HttpPost]
 		public HttpResponseMessage CreateProduct(Product product)
 		{
-			_productService.CreateProduct(product);
+			try
+			{
+				_productService.CreateProduct(product);
+			}
+			catch (GlobalException)
+			{
+				throw new HttpResponseException(HttpStatusCode.BadRequest);
+			}
+
 			return Request.CreateResponse(HttpStatusCode.NoContent);
 		}
 
@@ -35,7 +44,7 @@ namespace ProductAPI.Controllers
 		[HttpPut]
 		public HttpResponseMessage UpdateProduct(Guid id, Product product)
 		{
-			if(product.Id != id)
+			if (product.Id != id)
 			{
 				throw new HttpResponseException(HttpStatusCode.BadRequest);
 			}
@@ -46,9 +55,15 @@ namespace ProductAPI.Controllers
 		[Route("{id}")]
 		[HttpDelete]
 		public HttpResponseMessage DeleteProduct(Guid id)
-		{
-			_productService.DeleteProduct(id);
-			_productOptionService.DeleteByProductId(id);
+		{try
+			{
+				_productService.DeleteProduct(id);
+				_productOptionService.DeleteByProductId(id);
+			}
+			catch (GlobalException)
+			{
+				throw new HttpResponseException(HttpStatusCode.BadRequest);
+			}
 
 			return Request.CreateResponse(HttpStatusCode.NoContent);
 		}
@@ -106,7 +121,15 @@ namespace ProductAPI.Controllers
 			{
 				throw new HttpResponseException(HttpStatusCode.BadRequest);
 			}
-			_productOptionService.Update(option);
+
+			try
+			{
+				_productOptionService.Update(option);
+			}
+			catch(GlobalException)
+			{
+				throw new HttpResponseException(HttpStatusCode.BadRequest);
+			}
 
 			return Request.CreateResponse(HttpStatusCode.NoContent);
 		}
@@ -115,8 +138,14 @@ namespace ProductAPI.Controllers
 		[HttpDelete]
 		public HttpResponseMessage DeleteOptionById(Guid id)
 		{
-			_productOptionService.DeleteById(id);
-
+			try
+			{
+				_productOptionService.DeleteById(id);
+			}
+			catch (GlobalException)
+			{
+				throw new HttpResponseException(HttpStatusCode.NotFound);
+			}
 			return Request.CreateResponse(HttpStatusCode.NoContent);
 		}
 
@@ -140,7 +169,7 @@ namespace ProductAPI.Controllers
 			return option;
 		}
 
-
+		
 		#endregion
 
 	}

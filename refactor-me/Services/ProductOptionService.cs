@@ -5,6 +5,7 @@ using System.Data.Entity;
 using Domain = ProductAPI.Models;
 using AutoMapper;
 using ProductAPI.Data;
+using ProductAPI.ExceptionHandler;
 
 namespace ProductAPI.Services
 {
@@ -24,7 +25,7 @@ namespace ProductAPI.Services
 
 			if (productOption != null)
 			{
-				throw new Exception("Duplicate Product Option Id found.");
+				throw new GlobalException("Duplicate Product Option Id found.");
 			}
 
 			if (domainOption.Id == Guid.Empty)
@@ -38,15 +39,15 @@ namespace ProductAPI.Services
 
 		public void Update(Domain.ProductOption option)
 		{
-			var domainOption = Mapper.Map<Domain.ProductOption>(option);
+			var domainOption = Mapper.Map<ProductOption>(option);
 			var productOption = _dbContext.ProductOptions.Find(domainOption.Id);
 
 			if (productOption == null)
 			{
-				throw new Exception("Product Option not available.");
+				throw new GlobalException("Product Option not available.");
 			}
 
-			_dbContext.Entry(productOption).State = EntityState.Modified;
+			_dbContext.UpdateEntity(productOption, domainOption);
 			_dbContext.SaveChanges();
 		}
 
@@ -55,7 +56,7 @@ namespace ProductAPI.Services
 			var productOption = _dbContext.ProductOptions.Find(id);
 			if (productOption == null)
 			{
-				throw new Exception("Product Option not available.");
+				throw new GlobalException("Product Option not available.");
 			}
 			_dbContext.ProductOptions.Remove(productOption);
 			_dbContext.SaveChanges();
@@ -63,7 +64,9 @@ namespace ProductAPI.Services
 
 		public void DeleteByProductId(Guid id)
 		{
-			_dbContext.ProductOptions.RemoveRange(_dbContext.ProductOptions.Where(x => x.ProductId == id).ToList());
+			var options =_dbContext.ProductOptions.Where(x => x.ProductId == id).ToList();
+
+			_dbContext.ProductOptions.RemoveRange(options);
 			_dbContext.SaveChanges();
 		}
 
